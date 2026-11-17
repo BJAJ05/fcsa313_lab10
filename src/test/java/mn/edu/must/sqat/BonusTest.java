@@ -55,4 +55,10 @@ class BonusTest {
     void t7_run5_thr6_returns3() {
         assertEquals(3, DataFlowTargets.bonus(new int[] { 1, 1, 1, 1, 1 }, 6));
     }
+
+    @Test
+    @DisplayName("T8 bonus([1,0,1,1,1,1],0)=5: M2 kill - present=5 but longest streak=4")
+    void t8_m2kill_dayThenRun4_thr0_returns5() {
+        assertEquals(5, DataFlowTargets.bonus(new int[] { 1, 0, 1, 1, 1, 1 }, 0));
+    }
 }

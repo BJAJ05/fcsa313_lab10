@@ -36,7 +36,7 @@
 ```java
 31  public static int bonus(int[] attendance, int threshold) {  // def: attendance, threshold (параметр)
 32      if (attendance == null || threshold < 0) {              // p-use: attendance, threshold (threshold нь attendance != null үед л шалгагдана)
-33          throw new IllegalArgumentException("Буруу оролт");  // —
+33          throw new IllegalArgumentException("Буруу оролт");  // -
 35      int present = 0;                                        // def: present
 36      int streak = 0;                                         // def: streak
 37      int best = 0;                                           // def: best
@@ -70,7 +70,7 @@
 
 | Хувьсагч   | Def мөр | Use мөр | Төрөл | Def-clear зам                               | Тестийн ID                               | Хамрагдсан |
 | ---------- | ------- | ------- | ----- | ------------------------------------------- | ---------------------------------------- | ---------- |
-| attendance | 31      | 32      | p-use | 31 → 32                                     | T: T3; F: T1, T2, T4–T7                  | ✓          |
+| attendance | 31      | 32      | p-use | 31 → 32                                     | T: T3; F: T1, T2, T4-T7                  | ✓          |
 | attendance | 31      | 38      | p-use | 31 → 32(F) → 35 → 36 → 37 → 38              | T: T1, T2, T6, T7; F: T1, T2, T5, T6, T7 | ✓          |
 | threshold  | 31      | 32      | p-use | 31 → 32                                     | T: T4; F: T1, T2, T5, T6, T7             | ✓          |
 | threshold  | 31      | 50      | p-use | 31 → 32(F) → 35 → 36 → 37 → 38(F) → 49 → 50 | T: T2, T5; F: T1, T6, T7                 | ✓          |
@@ -116,14 +116,27 @@
 
 ### B4: All-DU-pairs тестүүд
 
-| ID  | Тестийн метод                 | Оролт                  | Хүлээгдэх | Шинээр хамарсан                          |
-| --- | ----------------------------- | ---------------------- | --------- | ---------------------------------------- |
-| T3  | `t3_nullArray_throws`         | `(null, 0)`            | exception | attendance 31 → 32 (T)                   |
-| T4  | `t4_negativeThreshold_throws` | `([1], -1)`            | exception | threshold 31 → 32 (T)                    |
+| ID  | Тестийн метод                 | Оролт                  | Хүлээгдэх | Шинээр хамарсан                              |
+| --- | ----------------------------- | ---------------------- | --------- | -------------------------------------------- |
+| T3  | `t3_nullArray_throws`         | `(null, 0)`            | exception | attendance 31 → 32 (T)                       |
+| T4  | `t4_negativeThreshold_throws` | `([1], -1)`            | exception | threshold 31 → 32 (T)                        |
 | T5  | `t5_empty_thr0_returns5`      | `([], 0)`              | 5         | present 35 → 50, best 37 → 53, score 51 → 56 |
-| T6  | `t6_allAbsent_thr1_returns0`  | `([0, 0], 1)`          | 0         | present 35 → 50 (F)                      |
-| T7  | `t7_run5_thr6_returns3`       | `([1, 1, 1, 1, 1], 6)` | 3         | score 49 → 54                            |
+| T6  | `t6_allAbsent_thr1_returns0`  | `([0, 0], 1)`          | 0         | present 35 → 50 (F)                          |
+| T7  | `t7_run5_thr6_returns3`       | `([1, 1, 1, 1, 1], 6)` | 3         | score 49 → 54                                |
 
 DU хос 23/23, биелэх боломжтой p-use салаа 22/22.
 
-Branch 100% ≠ all-DU-pairs: `GcdTest#gcd_12_8` + T1–T4 (5 тест) ажиллуулахад `results/jacoco-branch-only.csv`: BRANCH 16/16 (missed 0) боловч 5 DU хос хамрагдаагүй: gcd x 13 → 20, bonus present 35 → 50, best 37 → 53, score 49 → 54, score 51 → 56.
+Branch 100% ≠ all-DU-pairs: `GcdTest#gcd_12_8` + T1-T4 (5 тест) ажиллуулахад `results/jacoco-branch-only.csv`: BRANCH 16/16 (missed 0) боловч 5 DU хос хамрагдаагүй: gcd x 13 → 20, bonus present 35 → 50, best 37 → 53, score 49 → 54, score 51 → 56.
+
+## Хэсэг C: Fault seeding
+
+| №       | Мутаци                                                                | Үр дүн (`results/`)                                                | Унасан тест: expected / was                                                                              |
+| ------- | --------------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| M1      | 41-р мөр `streak = streak + 1;` устгасан                              | `mvn-test-M1.txt`: Tests run: 10, Failures: 2 - **баригдсан**      | `t2_run5_thr5_returns8`: expected: <8> but was: <5>; `t7_run5_thr6_returns3`: expected: <3> but was: <0> |
+| M2      | 42-44-р мөр (`if (streak > best) best = streak;`) → `best = present;` | `mvn-test-M2.txt`: Tests run: 10, Failures: 0 - **амьд үлдсэн**    | -                                                                                                        |
+| M2 + T8 | M2 хэвээр, `t8_m2kill_dayThenRun4_thr0_returns5` нэмсэн               | `mvn-test-M2-kill.txt`: Tests run: 11, Failures: 1 - **баригдсан** | `t8_m2kill_dayThenRun4_thr0_returns5`: expected: <5> but was: <8>                                        |
+| M3      | 48-р мөрийн дараа `int total = present + best;` нэмсэн                | `mvn-test-M3.txt`: Tests run: 11, Failures: 0 - **амьд үлдсэн**    | -                                                                                                        |
+
+M3: `javac -Xlint:all` анхааруулга өгөөгүй. VS Code (Java, 536870973): `The value of the local variable total is not used`.
+
+Эцсийн үр дүн: `results/mvn-verify-final.txt`: `Tests run: 11, Failures: 0, Errors: 0, Skipped: 0`. `results/jacoco-final.csv`: BRANCH 16/16 (missed 0), LINE 23/24 (missed 1 - 7-р мөрийн далд constructor).
